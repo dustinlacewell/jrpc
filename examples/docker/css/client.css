@@ -1,0 +1,59 @@
+#console {
+  position: relative;
+  height: 700px;
+  width: 100%;
+  background-color: black;
+  margin: 0px;
+  color: white;
+  font-family: monospace;
+}
+
+.jqconsole-output, .jqconsole-input, .jqconsole-old-input { color: white; }
+
+#containers {
+  overflow-x: hidden;
+  float:left;
+  font-family: monospace;
+  text-align: center;
+  width: 50%;
+}
+
+
+#logs {
+  width: 50%;
+  float: left;
+}
+
+#cmd {
+    width: 100%;
+}
+
+#containers table {
+    width: 100%;
+}
+
+#containers table thead td{
+    padding: 1em;
+    border-bottom: 1px solid black;
+}
+
+#containers tbody td {
+    padding: 1em;
+}
+#containers tbody tr:hover {
+    background: lightgrey;
+}
+
+.selected {
+    background: lightgreen;
+}
+
+.selected:hover {
+    background: green !important;
+}
+
+
+.jqconsole {
+    padding: 2em;
+    white-space: pre-wrap;
+}
