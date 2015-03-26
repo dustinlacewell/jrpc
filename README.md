@@ -3,7 +3,7 @@ JSON RPC over WebSockets
 ========================
 
 `jrpc` is a module built ontop of Twisted and Autobahn for creating websocket servers that
-speak a simple RPC protocol over JSON. A corresponding Javascript library is provided for
+speak a simple two-way RPC protocol over JSON. A corresponding Javascript library is provided for
 easy integration into front-ends. Both endpoints support bidirectional RPC with result
 callbacks.
 
@@ -66,12 +66,38 @@ Here is an example of a simple JRPCProtocol that implements some mathematical fu
         def doDivide(self, a, b):
             return a / b
 
-Each method will be exported without the "do" prefix such as "Add", "Sub" and so on. In the case that a peer calls "Divide" with 0 as the second parameter, the result will contain an `error` property with the name of the Python exception and the `result` the content of the exception.
+Each method will be exported without the "*do*" prefix such as `Add`, `Sub` and so on. In the case that a peer calls `Divide` with `0` as the second parameter, the result will contain an `error` property with the name of the Python exception and the `result` the content of the exception.
 
 
+Booting the Server
+------------------
+
+To get a server running we'll create a Twisted Application using a "tac" file. The tac file is responsible for creating a module-level attribute called `application` which should be a `twisted.application.service.Application` instance. The idea is that you add services to the application and those are started and handled by the framework.
+
+    from twisted.application import service
+
+    application = service.Application("mathservice")
+
+To create our service we need a factory for creating instances of our `MathProtocol` when clients connect.
 
 
+    factory = JRPCServerFactory('localhost', port=9000)
+    factory.protocol = MathProtocol
 
+We can then create the service and add it to our application.
 
+    from twisted.application import internet
 
+    mathService = internet.TCPServer(9000, factory)
+    mathService.setServiceParent(application)
 
+At this point we can start our little JRPC WebSocket server with the `twistd` utility.
+
+    $ twistd -noy math.tac
+    2015-03-26 15:35:06-0700 [-] Log opened.
+    2015-03-26 15:35:06-0700 [-] twistd 15.0.0 (/opt/virtualenvs/jrpc/bin/python 2.7.6) starting up.
+    2015-03-26 15:35:06-0700 [-] reactor class: twisted.internet.epollreactor.EPollReactor.
+    2015-03-26 15:35:06-0700 [-] JRPCServerFactory starting on 9000
+    2015-03-26 15:35:06-0700 [-] Starting factory <jrpc.factory.JRPCServerFactory object at 0x7f4144008790>
+
+To test that the server works we can use the include `rpc_call` utility which takes a hostname and port, method name and any arguments and makes a JRPC request.
