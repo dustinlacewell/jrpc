@@ -6,7 +6,8 @@ from twisted.application import internet, service
 from twisted.web.static import File
 from twisted.web.server import Site
 
-from jrpc.rpc import JRPCServerFactory, JRPCProtocol
+from jrpc.factory import JRPCServerFactory
+from jrpc.protocol import JRPCProtocol
 
 WS_HOST = os.environ.get('WS_HOST', 'localhost')
 WS_PORT = os.environ.get('WS_PORT', 9000)

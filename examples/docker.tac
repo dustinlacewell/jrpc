@@ -6,7 +6,8 @@ from twisted.application import internet, service
 from twisted.web.static import File
 from twisted.web.server import Site
 
-from jrpc.rpc import JRPCServerFactory, JRPCProtocol
+from jrpc.factory import JRPCServerFactory
+from jrpc.protocol import JRPCProtocol
 
 from .docker import Client
 
@@ -62,5 +63,3 @@ wsWebService = internet.TCPServer(8080, Site(root))
 application = app = service.Application("docker")
 wsLogService.setServiceParent(app)
 wsWebService.setServiceParent(app)
-
-
