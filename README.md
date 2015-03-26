@@ -13,10 +13,10 @@ Request Specification
 
 Requests are small objects with the following schema:
 
-    * **method** - the name of the remote method to call
-    * **args** - a list of positional arguments
-    * **kwargs** - an object containing keyword arguments
-    * **id** - an optional request ID
+* `method` - the name of the remote method to call
+* `args` - a list of positional arguments
+* `kwargs` - an object containing keyword arguments
+* `id` - an optional request ID
 
 Requests that include an ID will eventually result in a corresponding response containing
 the result of the remote method call. If a request does not contain an id or the id is
@@ -28,9 +28,9 @@ Response Specification
 
 Requests with an id will recieve a response with the following schema:
 
-    * **id** - the id matching the corresponding request
-    * **result** - the result of the request
-    * **error** - optional error type
+* `id` - the id matching the corresponding request
+* `result` - the result of the request
+* `error` - optional error type
 
 The response id will identify the corresponding request. If the response has a non-null
 error property, the request failed, otherwise it succeeded. In either case the result
@@ -44,8 +44,8 @@ The `jrpc.protocol.JRPCProtocol` class is the main class for user inheritance. I
 
 In particular the methods `request` and `invoke` are used to call methods on the remote peer.
 
-   * `invoke` will call a remote method but will not recieve a result
-   * `request` will call a remote method and return a Deferred which will fire with the response from the peer.
+* `invoke` will call a remote method but will not recieve a result
+* `request` will call a remote method and return a Deferred which will fire with the response from the peer.
 
 Making methods available to remote peers is as easy as defining methods on the protocol that begin with the prefix "**do**" such as `doThis` or `doThat`. These methods may return either direct values or Deferreds. In either case the result will be sent to the remote peer based on how the peer made the request.
 
