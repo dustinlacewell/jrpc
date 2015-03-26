@@ -73,7 +73,7 @@ JRPC.Response.prototype.json = function() {
 // and serving remote requests. A dispatch object
 // is used to define a mapping of RPC method names
 // to function callables.
-JRPC.WebSocket = function(host, port, dispatch) {
+JRPC.WebSocket = function(host, port, dispatch, callback) {
     // generate the websocket endpoint uri
     var endpoint = make_endpoint(host, port);
     // create the underlying websocket
@@ -85,6 +85,8 @@ JRPC.WebSocket = function(host, port, dispatch) {
     this.requests = {};
     // the next request id
     this._rid = 0;
+    // connected callback
+    this._callback = callback
 
     // Event Listeners
     // WebSocket event listeners will be called in the context
@@ -92,15 +94,18 @@ JRPC.WebSocket = function(host, port, dispatch) {
     // a small wrapper function that calls the corresponding
     // method on this JRPC.WebSocket instance.
     var rpc_socket = this; // save value of this in current closure
-    this.socket['onopen'] = function(e) { rpc_socket.onOpen(e) };
     this.socket['onclose'] = function(e) { rpc_socket.onClose(e) };
     this.socket['onerror'] = function(e) { rpc_socket.onError(e) };
     this.socket['onmessage'] = function(e) { rpc_socket.onMessage(e) };
+    this.socket['onopen'] = function(e) { rpc_socket.onOpen(e) };
 };
 
 JRPC.WebSocket.prototype.onOpen = function(e) {
     // The websocket connection has been established
     console.log("Connection established to: " + this.socket.url);
+    if (this._callback) {
+        this._callback();
+    }
 };
 
 JRPC.WebSocket.prototype.onClose = function(e) {
