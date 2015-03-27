@@ -2,10 +2,9 @@
 JSON RPC over WebSockets
 ========================
 
-`jrpc` is a module built ontop of Twisted and Autobahn for creating websocket servers that
-speak a simple two-way RPC protocol over JSON. A corresponding Javascript library is provided for
-easy integration into front-ends. Both endpoints support bidirectional RPC with result
-callbacks.
+`jrpc` is a module built ontop of (Twisted)[https://twistedmatrix.com/trac/] and (Autobahn)[http://autobahn.ws/] for creating (websocket)[https://developer.mozilla.org/en-US/docs/WebSockets] servers and clients that
+speak a simple two-way (RPC)[http://en.wikipedia.org/wiki/Remote_procedure_call] protocol over (JSON)[http://en.wikipedia.org/wiki/JSON]. A corresponding (Javascript library is provided)[https://github.com/dustinlacewell/jrpc/blob/master/jrpc.js] for
+easy integration into web front-ends.
 
 
 Quickstart
@@ -18,11 +17,11 @@ To quickly demonstrate some of the capabilities of the system the following comm
     python setup.py
     twistd -noy examples/math/math.tac
 
-At this point should be able to browse to http://localhost:8080/ and interact with a simple calculator demo that does its calculations by calling remote methods on a server running on port 9000.
+At this point should be able to browse to (http://localhost:8080/)[http://localhost:8080/] and interact with a (simple calculator demo)[https://github.com/dustinlacewell/jrpc/blob/master/examples/math/index.html] that does its calculations by (calling remote methods on a server)[https://github.com/dustinlacewell/jrpc/blob/master/examples/math/math.tac] running on port 9000.
 
 ### Docker
 
-*Alternatively*, if you have Docker installed you can test this out with a single command by running a premade image available on the DockerHub. By default it will run the `math/math.tac` example:
+*Alternatively*, if you have (Docker)[https://www.docker.com/] installed you can test this out with a single command by running (a premade image)[https://registry.hub.docker.com/u/dlacewell/jrpc/] available on the DockerHub. By default it will run the (math/math.tac example)[https://github.com/dustinlacewell/jrpc/tree/master/examples/math]:
 
     docker run -it --rm -p 8080:8080 -p 9000:9000 dlacewell/jrpc
 
@@ -33,48 +32,51 @@ You can also build the image yourself from your local checkout of the source:
     docker build -t jrpc .
     docker run -it --rm -p 8080:8080 -p 9000:9000 dlacewell/jrpc
 
+
 Request Specification
 ---------------------
 
-Requests are small objects with the following schema:
+(Requests)[https://github.com/dustinlacewell/jrpc/blob/master/jrpc/request.py] are small objects with the following schema:
 
 * `method` - the name of the remote method to call
 * `args` - a list of positional arguments
 * `kwargs` - an object containing keyword arguments
 * `id` - an optional request ID
 
-Requests that include an ID will eventually result in a corresponding response containing
-the result of the remote method call. If a request does not contain an id or the id is
-null, then no response will be returned and the request is considered a 'fire-and-forget'
-invocation.
+**Requests that include** a non-null `id` property indicate that the server should return a corresponding Response with the result of the remote method call. 
+
+**Requests that omit** or set the `id` property to `null` signal to the server that it should not bother with a sending response that the client is not interested in. Even if the call results in a failure no response will be delivered.
+
 
 Response Specification
 ----------------------
 
-Requests with an id will recieve a response with the following schema:
+(Responses)[https://github.com/dustinlacewell/jrpc/blob/master/jrpc/response.py] are returned to the caller for Requests made with a non-null `id`. The response will contain the result of a remote method call. It has the following properties:
 
 * `id` - the id matching the corresponding request
 * `result` - the result of the request
 * `error` - optional error type
 
-The response id will identify the corresponding request. If the response has a non-null
-error property, the request failed, otherwise it succeeded. In either case the result
-parameter will specify the result of the call.
+**If the call was successful**, the `error` attribute will be omitted or `null`.
+
+**If the call resulted in a failure**, the `error` attribute will contain the type of the failure and the `result` property will contain details of the failure.
 
 
-JRPCProtocol Creation
+Protocol Creation
 ---------------------
 
-The `jrpc.protocol.JRPCProtocol` class is the main class for user inheritance. It implements the handling of interaction with a remote JRPC peer.
+There are (two main base-classes)[https://github.com/dustinlacewell/jrpc/blob/master/jrpc/protocol.py] that user-code should use to implement customized RPC interfaces. One for servers, `jrpc.JRPCServerProtocol` and one for clients, `jrpc.JRPCClientProtocol`. *Both base classes work exactly the same way.*
 
-In particular the methods `request` and `invoke` are used to call methods on the remote peer.
+Both base-classes feature two methods, `request` and `invoke`, both of which are used to call methods on the remote JRPC peer:
 
-* `invoke` will call a remote method but will not recieve a result
-* `request` will call a remote method and return a Deferred which will fire with the response from the peer.
+* `request` will return a Deferred which fires with the result of the call
+* `invoke` will return None. There is no corresponding result response.
 
-Making methods available to remote peers is as easy as defining methods on the protocol that begin with the prefix "**do**" such as `doThis` or `doThat`. These methods may return either direct values or Deferreds. In either case the result will be sent to the remote peer based on how the peer made the request.
+When using either base-class, any method who's name begins with the prefix `do` will automatically be made available as an RPC method. RPC methods may (return a Deferred)[https://twistedmatrix.com/documents/current/core/howto/defer.html] or a direct result.
 
-Here is an example of a simple JRPCProtocol that implements some mathematical functions:
+*Remember: The result may or may not be returned to the caller depending on what kind of request the caller made.*
+
+Here is an example of a simple `JRPCServerProtocol` that implements some mathematical functions:
 
 ```python
 from jrpc import JRPCServerProtocol
@@ -93,19 +95,27 @@ class MathProtocol(JRPCServerProtocol):
         return float(a) / float(b)
 ```
 
-Each method will be exported without the "*do*" prefix such as `Add`, `Subtract` and so on. In the case that a peer calls `Divide` with `0` as the second parameter, the result will contain an `error` property with the name of the Python exception and the `result` the content of the exception.
+Each method starting with `do` will be exported to the available RPC interface. The `do` prefix is removed, so, `doAdd` is exported as `Add` and so on.
+
+In the case that a peer calls `Divide` with `0` as the second parameter, or any other failure condition arises during the call, the result will contain an `error` property designating the type of the failure. In this case the `result` property will contain details of the failure.
 
 
 Booting the Server
 ------------------
 
-To get a server running we'll create a Twisted Application using a "tac" file. The tac file is responsible for creating a module-level attribute called `application` which should be a `twisted.application.service.Application` instance. The idea is that you add services to the application and those are started and handled by the framework.
+To boot a server running this JRPC interface we'll create a (Twisted Service)[https://twistedmatrix.com/documents/15.0.0/api/twisted.application.service.html] using (Twisted's application framework)[http://twistedmatrix.com/documents/current/core/howto/application.html].
 
-    from twisted.application import service
+Twisted Applications start with (a generic top-level container service)[https://twistedmatrix.com/documents/15.0.0/api/twisted.application.service.Application.html]. By adding your own services to this root container service, they will all be properly started by the framework when your application starts. Twisted Applications are started by invoking (the command-line utility)[http://twistedmatrix.com/documents/current/core/howto/basics.html] `twistd`.
 
-    application = service.Application("mathservice")
+The main parent service and its various child services are all setup in what's called (a tac file)[http://twistedmatrix.com/documents/current/core/howto/application.html#twistd-and-tac] which is loaded by the `twistd` tool. `twistd` will look for a variable in the file `application, which should be set to the parent container service.
 
-We then create a service to serve our `MathProtocol` on the specified port. We then set the parent service to our application instance:
+```python
+from twisted.application import service
+
+application = service.Application("mathservice")
+```
+
+We then create a JRPC WebSocket service configured with our `MathProtocol` to run on the specified port. We then add the new math service to the parent service.
 
 ```python
 from jrpc import JRPCServerService
@@ -125,7 +135,7 @@ $ twistd -noy math.tac
 2015-03-26 15:35:06-0700 [-] Starting factory <jrpc.factory.JRPCServerFactory object at 0x7f4144008790>
 ```
 
-To test that the server works we can use the included `jrpc` utility which takes a method name and optionally positional and/or keyword arguments:
+To test that the server works we can use the (included jrpc utility)[https://github.com/dustinlacewell/jrpc/tree/master/bin] which takes a method name and optionally positional and/or keyword arguments:
 
 ```
 $ jrpc Add -a 5,10
