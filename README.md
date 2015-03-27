@@ -321,4 +321,4 @@ The finished example [is available here](https://github.com/dustinlacewell/jrpc/
 It Goes Both Ways
 -----------------
 
-You've seen how to build a simple RPC system with very little code using JRPC and how your web-interfaces can call methods against a backend server. JRPC actually supports two-way invocation. By passing an object as the third parameter to `JRPC.WebSocket` you can make javascript methods available to the server. Check additional examples to how this is done.
+You've seen how to build a simple RPC system with [very little code](https://github.com/dustinlacewell/jrpc/tree/master/examples/math) using JRPC and how your web-interfaces can call methods against a backend server. JRPC actually supports two-way invocation. By passing an object as the third parameter to `JRPC.WebSocket` you can make javascript methods available to the server. Check additional examples to how this is done.
