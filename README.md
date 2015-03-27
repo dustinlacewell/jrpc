@@ -8,6 +8,19 @@ easy integration into front-ends. Both endpoints support bidirectional RPC with 
 callbacks.
 
 
+Quickstart
+----------
+
+To quickly demonstrate some of the capabilities of the system the following commands should get you up and running with a demo:
+
+    git clone https://github.com/dustinlacewell/jrpc.git
+    cd jrpc
+    pip install -r requirements.txt
+    cd examples
+    twistd -noy math.tac
+
+At this point should be able to browse to http://localhost:8080/ and interact with a simple calculator demo that does its calculations by calling remote methods on a server running on port 9000.
+
 Request Specification
 ---------------------
 
