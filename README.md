@@ -20,7 +20,7 @@ To quickly demonstrate some of the capabilities of the system the following comm
 
 At this point should be able to browse to http://localhost:8080/ and interact with a simple calculator demo that does its calculations by calling remote methods on a server running on port 9000.
 
-**Docker**
+### Docker
 
 *Alternatively*, if you have Docker installed you can test this out with a single command by running a premade image available on the DockerHub. By default it will run the `math/math.tac` example:
 
@@ -76,20 +76,22 @@ Making methods available to remote peers is as easy as defining methods on the p
 
 Here is an example of a simple JRPCProtocol that implements some mathematical functions:
 
-    from jrpc import JRPCServerProtocol
-    
-    class MathProtocol(JRPCServerProtocol):
-        def doAdd(self, a, b):
-            return float(a) + float(b)
-    
-        def doSubtract(self, a, b):
-            return float(a) - float(b)
-    
-        def doMultiply(self, a, b):
-            return float(a) * float(b)
-    
-        def doDivide(self, a, b):
-            return float(a) / float(b)
+```python
+from jrpc import JRPCServerProtocol
+
+class MathProtocol(JRPCServerProtocol):
+    def doAdd(self, a, b):
+        return float(a) + float(b)
+
+    def doSubtract(self, a, b):
+        return float(a) - float(b)
+
+    def doMultiply(self, a, b):
+        return float(a) * float(b)
+
+    def doDivide(self, a, b):
+        return float(a) / float(b)
+```
 
 Each method will be exported without the "*do*" prefix such as `Add`, `Subtract` and so on. In the case that a peer calls `Divide` with `0` as the second parameter, the result will contain an `error` property with the name of the Python exception and the `result` the content of the exception.
 
@@ -105,27 +107,34 @@ To get a server running we'll create a Twisted Application using a "tac" file. T
 
 We then create a service to serve our `MathProtocol` on the specified port. We then set the parent service to our application instance:
 
-   from jrpc import JRPCServerService
+```python
+from jrpc import JRPCServerService
 
-   mathService = JRPCServerService(MathProtocol, 'localhost', 9000)
-   mathService.setServiceParent(application)
+mathService = JRPCServerService(MathProtocol, 'localhost', 9000)
+mathService.setServiceParent(application)
+```
 
 At this point we can start our little JRPC WebSocket server with the `twistd` utility.
 
-    $ twistd -noy math.tac
-    2015-03-26 15:35:06-0700 [-] Log opened.
-    2015-03-26 15:35:06-0700 [-] twistd 15.0.0 (/opt/virtualenvs/jrpc/bin/python 2.7.6) starting up.
-    2015-03-26 15:35:06-0700 [-] reactor class: twisted.internet.epollreactor.EPollReactor.
-    2015-03-26 15:35:06-0700 [-] JRPCServerFactory starting on 9000
-    2015-03-26 15:35:06-0700 [-] Starting factory <jrpc.factory.JRPCServerFactory object at 0x7f4144008790>
+```
+$ twistd -noy math.tac
+2015-03-26 15:35:06-0700 [-] Log opened.
+2015-03-26 15:35:06-0700 [-] twistd 15.0.0 (/opt/virtualenvs/jrpc/bin/python 2.7.6) sting up.
+2015-03-26 15:35:06-0700 [-] reactor class: twisted.internet.epollreactor.EPollReactor.
+2015-03-26 15:35:06-0700 [-] JRPCServerFactory starting on 9000
+2015-03-26 15:35:06-0700 [-] Starting factory <jrpc.factory.JRPCServerFactory object at 0x7f4144008790>
+```
 
 To test that the server works we can use the included `jrpc` utility which takes a method name and optionally positional and/or keyword arguments:
 
-    $ jrpc Add -a 5,10
-    15
+```
+$ jrpc Add -a 5,10
+15
+```
 
 If any sort of exception is raised on the remote side `jrpc` will display the exception information:
 
-    $ ./jrpc Add -a 10,Foo
-    TypeError:unsupported operand type(s) for +: 'int' and 'unicode'
-
+```
+$ ./jrpc Add -a 10,Foo
+TypeError:unsupported operand type(s) for +: 'int' and 'unicode'
+```
