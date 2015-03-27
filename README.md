@@ -124,6 +124,34 @@ mathService = JRPCServerService(MathProtocol, 'localhost', 9000)
 mathService.setServiceParent(application)
 ```
 
+### Putting it Together
+
+With all the pieces in place we should have a tac file called `math.tac` that looks something like the following:
+
+```python
+from twisted.application import service
+
+from jrpc import JRPCServerService, JRPCServerProtocol
+
+class MathProtocol(JRPCServerProtocol):
+    def doAdd(self, a, b):
+        return int(a) + int(b)
+
+    def doSubtract(self, a, b):
+        return int(a) - int(b)
+
+    def doMultiply(self, a, b):
+        return int(a) * int(b)
+
+    def doDivide(self, a, b):
+        return float(a) / float(b)
+
+application = service.Application("mathservice")
+
+mathService = JRPCServerService(MathProtocol, 'localhost', 9000)
+mathService.setServiceParent(application)
+```
+
 At this point we can start our little JRPC WebSocket server with the `twistd` utility.
 
 ```
@@ -134,6 +162,8 @@ $ twistd -noy math.tac
 2015-03-26 15:35:06-0700 [-] JRPCServerFactory starting on 9000
 2015-03-26 15:35:06-0700 [-] Starting factory <jrpc.factory.JRPCServerFactory object at 0x7f4144008790>
 ```
+
+### Testing the Server
 
 To test that the server works we can use the [included jrpc utility](https://github.com/dustinlacewell/jrpc/tree/master/bin) which takes a method name and optionally positional and/or keyword arguments:
 
@@ -148,3 +178,143 @@ If any sort of exception is raised on the remote side `jrpc` will display the ex
 $ ./jrpc Add -a 10,Foo
 TypeError:unsupported operand type(s) for +: 'int' and 'unicode'
 ```
+
+
+Building a Web Client
+---------------------
+
+JRPC comes with a [javascript library](https://github.com/dustinlacewell/jrpc/blob/master/jrpc.js) which makes is pretty easy to create web interfaces that can communicate with your server.
+
+We'll use the following simple html file for our interface. Just two textboxes for input, some buttons to invoke the various RPC methods available on the server, and a textbox for the output:
+
+```html
+<html>
+  <body>
+    <input type="textbox" id="a" />
+    <input type="textbox" id="b" />
+    <button type="submit" id="Add">Add</button>
+    <button type="submit" id="Subtract">Subtract</button>
+    <button type="submit" id="Multiply">Multiply</button>
+    <button type="submit" id="Divide">Divide</button>
+    <input type="textbox" id="result" />
+  </body>
+</html>
+```
+
+### Serving the Files
+
+We can easily serve the web files for our interface by using twisted to start a web-server as just another service in our tac file:
+
+```python
+from twisted.web.static import File
+from twisted.web.server import Site
+
+root = File('.')
+webService = internet.TCPServer(8080, Site(root))
+webService.setServiceParent(application)
+```
+
+Now when we run the tac file we should see an additional service startup in the output:
+
+```
+$ twistd -noy examples/math/math.tac
+2015-03-27 00:21:48-0700 [-] Log opened.
+2015-03-27 00:21:48-0700 [-] twistd 15.0.0 (/opt/virtualenvs/jrpc/bin/python 2.7.6) starting up.
+2015-03-27 00:21:48-0700 [-] reactor class: twisted.internet.epollreactor.EPollReactor.
+2015-03-27 00:21:48-0700 [-] JRPCServerFactory starting on 9000
+2015-03-27 00:21:48-0700 [-] Starting factory <jrpc.factory.JRPCServerFactory object at 0x7f45c778e310>
+2015-03-27 00:21:48-0700 [-] Site starting on 8080
+2015-03-27 00:21:48-0700 [-] Starting factory <twisted.web.server.Site instance at 0x7f45c7792680>
+```
+
+We can see that not only do we have our JRPC WebSocket server running on port `9000` but we also have a web server running on port `8080`. By visiting [http://localhost:8080/][http://localhost:8080] you should be able to see our simple web interface.
+
+
+### Connecting it all up
+
+Now we'll add some javascript to the page that opens a WebSocket to our JRPC server and bind the remote methods to our buttons. First we'll add [JQuery](https://jquery.com/) and the [JRPC javascript library](https://github.com/dustinlacewell/jrpc/blob/master/jrpc.js) to a new `<head></head>` section:
+
+```html
+  <head>
+    <script src="//code.jquery.com/jquery-1.11.2.min.js"></script>
+    <script type="text/javascript" src="jrpc.js"></script>
+  </head>
+```
+
+Next we'll create a JRPC WebSocket when the page is loaded by adding a new `<script></script>` section at the end of our `<body></body>` section:
+
+```html
+    <script type="text/javascript">
+      $(document).ready(function() {
+        rpc = new JRPC.WebSocket(window.location.hostname, 9000);
+      });
+    </script>
+```
+
+If you reload the page, you should now see a message in your browser's debug console that it has established a websocket connection to the local server.
+
+Next, we'll attach `click` handlers to all of our buttons. We'll use their `id` attribute to identify which RPC method should be called when they are clicked. We'll use the two `<input />`s as our arguments to the method call:
+
+```html
+    <script type="text/javascript">
+      $(document).ready(function() {
+        rpc = new JRPC.WebSocket(window.location.hostname, 9000);
+        $('button').click(function(e) {
+          // prevent actual form submission
+          e.preventDefault();
+          // grab the two input values
+          var $a = $("#a").val();
+          var $b = $("#b").val();
+          // grab the method name from the button we clicked
+          var method = $(this).attr('id');
+          // invoke the remote method on the RPC server
+          rpc.invoke(method, [$a, $b]);
+        });
+      });
+    </script>
+```
+
+If we reload the page, and we can see that we're connected to the server we can input some values into the text boxes and press buttons to trigger the execution of methods running on the server. However, we are not receiving any responses with the result. `invoke` is a 'fire-and-forget' way of triggering remote methods. If we want to actually receive the result of the call we'll need to use `request` instead and provide a callback. With all the changes our `index.html` should read as follows:
+
+```html
+<!DOCTYPE html>
+<html>
+  <head>
+    <script src="//code.jquery.com/jquery-1.11.2.min.js"></script>
+    <script type="text/javascript" src="jrpc.js"></script>
+  </head>
+  <body>
+    <input type="textbox" id="a" />
+    <input type="textbox" id="b" />
+    <button type="submit" id="Add">Add</button>
+    <button type="submit" id="Subtract">Subtract</button>
+    <button type="submit" id="Multiply">Multiply</button>
+    <button type="submit" id="Divide">Divide</button>
+    <input type="textbox" id="result" />
+    <script type="text/javascript">
+      $(document).ready(function() {
+        rpc = new JRPC.WebSocket(window.location.hostname, 9000);
+        $('button').click(function(e) {
+          e.preventDefault();
+          var $a = $("#a").val();
+          var $b = $("#b").val();
+          var method = $(this).attr('id');
+          rpc.request(method, [$a, $b], {}, function(r) {
+            $("#result").val(r.result);
+          }, function(e) {
+            alert(e.error + ": " + e.result);
+          });
+        });
+      });
+    </script>
+  </body>
+</html>
+```
+
+If we refresh the page, we can now input values and clicking on buttons will actually result in the response values showing up in the output textbox. By passing a callback to `request` we can handle what should happen when the result is returned to us. The second callback is how we can handle exceptions. Try dividing by zero to see how the error is presented as an alert.
+
+
+It Goes Both Ways
+-----------------
+
+You've seen how to build a simple RPC system with very little code using JRPC and how your web-interfaces can call methods against a backend server. JRPC actually supports two-way invocation. By passing an object as the third parameter to `JRPC.WebSocket` you can make javascript methods available to the server. Check additional examples to how this is done.

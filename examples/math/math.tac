@@ -1,5 +1,3 @@
-import os, json, sys
-
 from twisted.application import internet, service
 from twisted.web.static import File
 from twisted.web.server import Site
@@ -24,6 +22,6 @@ application = service.Application("mathservice")
 mathService = JRPCServerService(MathProtocol, 'localhost', 9000)
 mathService.setServiceParent(application)
 
-root = File('math')
+root = File('.')
 webService = internet.TCPServer(8080, Site(root))
 webService.setServiceParent(application)
