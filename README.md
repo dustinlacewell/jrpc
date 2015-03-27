@@ -36,7 +36,7 @@ You can also build the image yourself from your local checkout of the source:
 Request Specification
 ---------------------
 
-[Requests](https://github.com/dustinlacewell/jrpc/blob/master/jrpc/request.py] are small objects with the following schema:
+[Requests](https://github.com/dustinlacewell/jrpc/blob/master/jrpc/request.py) are small objects with the following schema:
 
 * `method` - the name of the remote method to call
 * `args` - a list of positional arguments
