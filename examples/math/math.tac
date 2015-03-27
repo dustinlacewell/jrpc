@@ -1,7 +1,5 @@
 import os, json, sys
 
-sys.path.append("..")
-
 from twisted.application import internet, service
 from twisted.web.static import File
 from twisted.web.server import Site

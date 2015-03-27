@@ -15,11 +15,21 @@ To quickly demonstrate some of the capabilities of the system the following comm
 
     git clone https://github.com/dustinlacewell/jrpc.git
     cd jrpc
-    pip install -r requirements.txt
-    cd examples
-    twistd -noy math.tac
+    python setup.py
+    twistd -noy examples/math/math.tac
 
 At this point should be able to browse to http://localhost:8080/ and interact with a simple calculator demo that does its calculations by calling remote methods on a server running on port 9000.
+
+*Alternatively*, if you have Docker installed you can test this out with a single command by running a premade image available on the DockerHub. By default it will run the `math/math.tac` example:
+
+    docker run -it --rm -p 8080:8080 -p 9000:9000 dlacewell/jrpc
+
+You can also build the image yourself from your local checkout of the source:
+
+    git clone https://github.com/dustinlacewell/jrpc.git
+    cd jrpc
+    docker build -t jrpc .
+    docker run -it --rm -p 8080:8080 -p 9000:9000 dlacewell/jrpc
 
 Request Specification
 ---------------------
