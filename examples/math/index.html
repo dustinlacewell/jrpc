@@ -2,6 +2,7 @@
 <html>
   <head>
     <script src="//code.jquery.com/jquery-1.11.2.min.js"></script>
+    <script type="text/javascript" src="jrpc.js"></script>
   </head>
   <body>
     <input type="textbox" id="a" />
@@ -11,7 +12,6 @@
     <button type="submit" id="Multiply">Multiply</button>
     <button type="submit" id="Divide">Divide</button>
     <input type="textbox" id="result" />
-    <script type="text/javascript" src="jrpc.js"></script>
     <script type="text/javascript">
       $(document).ready(function() {
         rpc = new JRPC.WebSocket(window.location.hostname, 9000);
