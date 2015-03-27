@@ -1,13 +1,12 @@
-import os, json, sys
+import os, sys
 
-sys.path.append("..")
+sys.path.append(os.path.dirname(__file__))
 
 from twisted.application import internet, service
 from twisted.web.static import File
 from twisted.web.server import Site
 
-from jrpc.factory import JRPCServerFactory
-from jrpc.protocol import JRPCProtocol
+from jrpc import JRPCServerService, JRPCServerProtocol
 
 from .docker import Client
 
@@ -16,9 +15,7 @@ WS_PORT = os.environ.get('WS_PORT', 9000)
 
 dc = Client('docker:///var/run/docker.sock')
 
-class DockerProtocol(JRPCProtocol):
-
-    cid = None
+class DockerProtocol(JRPCServerProtocol):
 
     def invokeRefresh(self, containers):
         '''update client with new container data'''
@@ -49,17 +46,11 @@ class DockerProtocol(JRPCProtocol):
         self.cid = cid
 
 
-factory = JRPCServerFactory(WS_HOST, port=WS_PORT, debug=False)
-factory.protocol = DockerProtocol
-
-# websockets logging service
-wsLogService = internet.TCPServer(int(WS_PORT), factory)
-
-# webserver
-root = File('docker')
-wsWebService = internet.TCPServer(8080, Site(root))
-
-# create the Application
 application = app = service.Application("docker")
-wsLogService.setServiceParent(app)
-wsWebService.setServiceParent(app)
+
+dockerService = JRPCServerService(DockerProtocol, WS_HOST, WS_PORT)
+dockerService.setServiceParent(app)
+
+root = File(os.path.dirname(__file__))
+webService = internet.TCPServer(8080, Site(root))
+webService.setServiceParent(app)
