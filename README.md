@@ -100,4 +100,13 @@ At this point we can start our little JRPC WebSocket server with the `twistd` ut
     2015-03-26 15:35:06-0700 [-] JRPCServerFactory starting on 9000
     2015-03-26 15:35:06-0700 [-] Starting factory <jrpc.factory.JRPCServerFactory object at 0x7f4144008790>
 
-To test that the server works we can use the include `rpc_call` utility which takes a hostname and port, method name and any arguments and makes a JRPC request.
+To test that the server works we can use the include `rpc_call` utility which takes a method name and optionally positional and/or keyword arguments:
+
+    $ ./rpc_call Add -a 5,10
+    15
+
+If any sort of exception is raised on the remote side `rpc_call` will display the exception information:
+
+    $ ./rpc_call Add -a 10,Foo
+    TypeError:unsupported operand type(s) for +: 'int' and 'unicode'
+
