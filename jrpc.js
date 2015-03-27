@@ -159,7 +159,11 @@ JRPC.WebSocket.prototype.handle_response = function(object) {
     // call the appropriate callback depending on whether
     // an error type was provided.
     if (response.error != null) {
-        handlers.eb(response);
+        if (handlers.eb) {
+            handlers.eb(response);
+        } else {
+            console.log("Unhandled error response: " + response.error + " " + response.result);
+        }
     } else {
         handlers.cb(response);
     }
