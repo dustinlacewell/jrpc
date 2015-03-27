@@ -2,8 +2,8 @@
 JSON RPC over WebSockets
 ========================
 
-`jrpc` is a module built ontop of (Twisted)[https://twistedmatrix.com/trac/] and (Autobahn)[http://autobahn.ws/] for creating (websocket)[https://developer.mozilla.org/en-US/docs/WebSockets] servers and clients that
-speak a simple two-way (RPC)[http://en.wikipedia.org/wiki/Remote_procedure_call] protocol over (JSON)[http://en.wikipedia.org/wiki/JSON]. A corresponding (Javascript library is provided)[https://github.com/dustinlacewell/jrpc/blob/master/jrpc.js] for
+`jrpc` is a module built ontop of [Twisted](https://twistedmatrix.com/trac/) and [Autobahn](http://autobahn.ws/) for creating [websocket](https://developer.mozilla.org/en-US/docs/WebSockets) servers and clients that
+speak a simple two-way [RPC](http://en.wikipedia.org/wiki/Remote_procedure_call) protocol over [JSON](http://en.wikipedia.org/wiki/JSON). A corresponding [Javascript library is provided](https://github.com/dustinlacewell/jrpc/blob/master/jrpc.js) for
 easy integration into web front-ends.
 
 
@@ -17,11 +17,11 @@ To quickly demonstrate some of the capabilities of the system the following comm
     python setup.py
     twistd -noy examples/math/math.tac
 
-At this point should be able to browse to (http://localhost:8080/)[http://localhost:8080/] and interact with a (simple calculator demo)[https://github.com/dustinlacewell/jrpc/blob/master/examples/math/index.html] that does its calculations by (calling remote methods on a server)[https://github.com/dustinlacewell/jrpc/blob/master/examples/math/math.tac] running on port 9000.
+At this point should be able to browse to [http://localhost:8080/](http://localhost:8080/) and interact with a [simple calculator demo](https://github.com/dustinlacewell/jrpc/blob/master/examples/math/index.html) that does its calculations by [calling remote methods on a server](https://github.com/dustinlacewell/jrpc/blob/master/examples/math/math.tac) running on port 9000.
 
 ### Docker
 
-*Alternatively*, if you have (Docker)[https://www.docker.com/] installed you can test this out with a single command by running (a premade image)[https://registry.hub.docker.com/u/dlacewell/jrpc/] available on the DockerHub. By default it will run the (math/math.tac example)[https://github.com/dustinlacewell/jrpc/tree/master/examples/math]:
+*Alternatively*, if you have [Docker](https://www.docker.com/) installed you can test this out with a single command by running [a premade image](https://registry.hub.docker.com/u/dlacewell/jrpc/) available on the DockerHub. By default it will run the [math/math.tac example](https://github.com/dustinlacewell/jrpc/tree/master/examples/math):
 
     docker run -it --rm -p 8080:8080 -p 9000:9000 dlacewell/jrpc
 
@@ -36,7 +36,7 @@ You can also build the image yourself from your local checkout of the source:
 Request Specification
 ---------------------
 
-(Requests)[https://github.com/dustinlacewell/jrpc/blob/master/jrpc/request.py] are small objects with the following schema:
+[Requests](https://github.com/dustinlacewell/jrpc/blob/master/jrpc/request.py] are small objects with the following schema:
 
 * `method` - the name of the remote method to call
 * `args` - a list of positional arguments
@@ -51,7 +51,7 @@ Request Specification
 Response Specification
 ----------------------
 
-(Responses)[https://github.com/dustinlacewell/jrpc/blob/master/jrpc/response.py] are returned to the caller for Requests made with a non-null `id`. The response will contain the result of a remote method call. It has the following properties:
+[Responses](https://github.com/dustinlacewell/jrpc/blob/master/jrpc/response.py) are returned to the caller for Requests made with a non-null `id`. The response will contain the result of a remote method call. It has the following properties:
 
 * `id` - the id matching the corresponding request
 * `result` - the result of the request
@@ -65,14 +65,14 @@ Response Specification
 Protocol Creation
 ---------------------
 
-There are (two main base-classes)[https://github.com/dustinlacewell/jrpc/blob/master/jrpc/protocol.py] that user-code should use to implement customized RPC interfaces. One for servers, `jrpc.JRPCServerProtocol` and one for clients, `jrpc.JRPCClientProtocol`. *Both base classes work exactly the same way.*
+There are [two main base-classes](https://github.com/dustinlacewell/jrpc/blob/master/jrpc/protocol.py) that user-code should use to implement customized RPC interfaces. One for servers, `jrpc.JRPCServerProtocol` and one for clients, `jrpc.JRPCClientProtocol`. *Both base classes work exactly the same way.*
 
 Both base-classes feature two methods, `request` and `invoke`, both of which are used to call methods on the remote JRPC peer:
 
 * `request` will return a Deferred which fires with the result of the call
 * `invoke` will return None. There is no corresponding result response.
 
-When using either base-class, any method who's name begins with the prefix `do` will automatically be made available as an RPC method. RPC methods may (return a Deferred)[https://twistedmatrix.com/documents/current/core/howto/defer.html] or a direct result.
+When using either base-class, any method who's name begins with the prefix `do` will automatically be made available as an RPC method. RPC methods may [return a Deferred](https://twistedmatrix.com/documents/current/core/howto/defer.html) or a direct result.
 
 *Remember: The result may or may not be returned to the caller depending on what kind of request the caller made.*
 
@@ -103,11 +103,11 @@ In the case that a peer calls `Divide` with `0` as the second parameter, or any 
 Booting the Server
 ------------------
 
-To boot a server running this JRPC interface we'll create a (Twisted Service)[https://twistedmatrix.com/documents/15.0.0/api/twisted.application.service.html] using (Twisted's application framework)[http://twistedmatrix.com/documents/current/core/howto/application.html].
+To boot a server running this JRPC interface we'll create a [Twisted Service](https://twistedmatrix.com/documents/15.0.0/api/twisted.application.service.html) using [Twisted's application framework](http://twistedmatrix.com/documents/current/core/howto/application.html).
 
-Twisted Applications start with (a generic top-level container service)[https://twistedmatrix.com/documents/15.0.0/api/twisted.application.service.Application.html]. By adding your own services to this root container service, they will all be properly started by the framework when your application starts. Twisted Applications are started by invoking (the command-line utility)[http://twistedmatrix.com/documents/current/core/howto/basics.html] `twistd`.
+Twisted Applications start with [a generic top-level container service](https://twistedmatrix.com/documents/15.0.0/api/twisted.application.service.Application.html). By adding your own services to this root container service, they will all be properly started by the framework when your application starts. Twisted Applications are started by invoking [the command-line utility](http://twistedmatrix.com/documents/current/core/howto/basics.html) `twistd`.
 
-The main parent service and its various child services are all setup in what's called (a tac file)[http://twistedmatrix.com/documents/current/core/howto/application.html#twistd-and-tac] which is loaded by the `twistd` tool. `twistd` will look for a variable in the file `application, which should be set to the parent container service.
+The main parent service and its various child services are all setup in what's called [a tac file](http://twistedmatrix.com/documents/current/core/howto/application.html#twistd-and-tac) which is loaded by the `twistd` tool. `twistd` will look for a variable in the file `application, which should be set to the parent container service.
 
 ```python
 from twisted.application import service
@@ -135,7 +135,7 @@ $ twistd -noy math.tac
 2015-03-26 15:35:06-0700 [-] Starting factory <jrpc.factory.JRPCServerFactory object at 0x7f4144008790>
 ```
 
-To test that the server works we can use the (included jrpc utility)[https://github.com/dustinlacewell/jrpc/tree/master/bin] which takes a method name and optionally positional and/or keyword arguments:
+To test that the server works we can use the [included jrpc utility](https://github.com/dustinlacewell/jrpc/tree/master/bin) which takes a method name and optionally positional and/or keyword arguments:
 
 ```
 $ jrpc Add -a 5,10
