@@ -1,14 +1,14 @@
 from ubuntu
 
-run apt-get -y update && apt-get -y install python-dev python-pip libffi-dev 
+run apt-get -y update && apt-get -y install python-dev python-pip libffi-dev libssl-dev
 
-run apt-get -y install libssl-dev
+add requirements.txt /requirements.txt
+
+run pip install -r /requirements.txt
 
 add . /jrpc
 
-workdir /jrpc
-
-run python setup.py install
+run cd /jrpc && python setup.py install
 
 workdir /jrpc/examples
 
