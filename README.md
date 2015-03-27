@@ -203,13 +203,15 @@ We'll use the following simple html file for our interface. Just two textboxes f
 
 ### Serving the Files
 
-We can easily serve the web files for our interface by using twisted to start a web-server as just another service in our tac file:
+We can easily serve the web files for our interface by using twisted to start a web-server as just another service in our tac file. We tell the web-service to serve the directory that our `math.tac` and `index.html` files are in:
 
 ```python
+import os
+
 from twisted.web.static import File
 from twisted.web.server import Site
 
-root = File('.')
+root = File(os.path.dirname(__file__))
 webService = internet.TCPServer(8080, Site(root))
 webService.setServiceParent(application)
 ```
@@ -312,6 +314,8 @@ If we reload the page, and we can see that we're connected to the server we can 
 ```
 
 If we refresh the page, we can now input values and clicking on buttons will actually result in the response values showing up in the output textbox. By passing a callback to `request` we can handle what should happen when the result is returned to us. The second callback is how we can handle exceptions. Try dividing by zero to see how the error is presented as an alert.
+
+The finished example [is available here](https://github.com/dustinlacewell/jrpc/tree/master/examples/math).
 
 
 It Goes Both Ways
