@@ -1,35 +1,28 @@
-import os, json, sys
-
-sys.path.append("..")
+import os
 
 from twisted.application import internet, service
 from twisted.web.static import File
 from twisted.web.server import Site
 
-from jrpc.factory import JRPCServerFactory
-from jrpc.protocol import JRPCProtocol
+from jrpc import JRPCServerService, JRPCServerProtocol
 
 WS_HOST = os.environ.get('WS_HOST', 'localhost')
 WS_PORT = os.environ.get('WS_PORT', 9000)
 
-class TemplateProtocol(JRPCProtocol):
-    def doAdd(self, a, b):
-        self.invoke('Alert', message="The result was: {}".format(a + b))
-
-
-factory = JRPCServerFactory(WS_HOST, port=WS_PORT, debug=False)
-factory.protocol = TemplateProtocol
-
-# websockets logging service
-wsLogService = internet.TCPServer(int(WS_PORT), factory)
-
-# webserver
-root = File('template')
-wsWebService = internet.TCPServer(8080, Site(root))
+class TemplateProtocol(JRPCServerProtocol):
+   def doEcho(self, msg):
+       return msg
 
 # create the Application
 application = app = service.Application("template")
-wsLogService.setServiceParent(app)
-wsWebService.setServiceParent(app)
+
+# create the RPC Server
+templateService = JRPCServerService(TemplateProtocol, WS_HOST, WS_PORT)
+templateService.setServiceParent(app)
+
+# create the Web Server
+root = File(os.path.dirname(__file__))
+webService = internet.TCPServer(8080, Site(root))
+webService.setServiceParent(app)
 
 
