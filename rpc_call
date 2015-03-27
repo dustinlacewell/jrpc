@@ -1,0 +1,65 @@
+#!/usr/bin/env python
+import argparse
+
+from twisted.internet import reactor
+from twisted.internet.task import react
+
+from jrpc import JRPCClientEndpoint, JRPCClientProtocol
+
+epilog = """
+
+Positional arguments are passed as a comma delimited list. For example
+to pass a number and a string:\n
+
+  # escapes are required to avoid shell interpretation
+  ./rpc_call MethodName -a 42,\'Hello World\'
+
+Keyword arguments are passed as a comma delimited list of key value
+pairs separated by an '=' sign:
+
+  ./rpc_call MethodName -k foo=bar,biz=baz
+"""
+
+parser = argparse.ArgumentParser(description='JRPC WebSocket test client',
+                                 epilog=epilog,
+                                 formatter_class=argparse.RawTextHelpFormatter)
+parser.add_argument('method', nargs=1, help='an integer for the accumulator')
+parser.add_argument('-a', '--args', default='', help='positional arguments')
+parser.add_argument('-k', '--kwargs', default='', help='keyword arguments')
+
+def echo(msg):
+    print msg
+
+def err(failure):
+    print failure.value
+
+class CallProtocol(JRPCClientProtocol):
+    def parse_args(self, _args):
+        args = []
+        for arg in _args.split(','):
+            try: args.append(eval(arg))
+            except: args.append(arg)
+        return args
+
+    def parse_kwargs(self, _kwargs):
+        pairs = [p.split('=') for p in _kwargs.split(',') if '=' in p]
+        kwargs = {}
+        for pair in pairs:
+            try: key = eval(pair[0])
+            except: key = pair[0]
+            try: val = eval(pair[1])
+            except: val = pair[1]
+            kwargs[key] = val
+        return kwargs
+
+    def onOpen(self):
+        args = self.parse_args(self.args.args)
+        kwargs = self.parse_kwargs(self.args.kwargs)
+        d = self.request(self.args.method[0], *args, **kwargs)
+        d.addCallback(echo)
+        d.addErrback(err)
+        d.addCallback(lambda r: reactor.stop())
+
+CallProtocol.args = parser.parse_args()
+JRPCClientEndpoint(CallProtocol)
+reactor.run()
