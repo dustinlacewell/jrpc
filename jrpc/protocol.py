@@ -1,9 +1,12 @@
+import json
+
 from autobahn.twisted.websocket import WebSocketServerProtocol
+from autobahn.twisted.websocket import WebSocketClientProtocol
 
 from .manager import JRPCManager
 from .dispatcher import Dispatcher
 
-class JRPCProtocol(WebSocketServerProtocol):
+class JRPCProtocol(object):
     """
     This class is the main protocol for handling interaction with
     a remote JRPC peer. It features a simple interface for making
@@ -14,15 +17,10 @@ class JRPCProtocol(WebSocketServerProtocol):
     can implement methods beginning with the token "do" which
     will make them automatically available.
     """
-    def __init__(self, dispatch):
-        self.dispatch = dispatch
-        self.manager = JRPCManager(self, Dispatcher(self))
-
-    def onConnect(self, peer):
-        print "Websocket connected to peer: {}".format(peer)
+    def __init__(self, dispatch=None):
+        self.manager = JRPCManager(self, dispatch or Dispatcher(self))
 
     def onMessage(self, payload, isBinary):
-        # hand the message to the rpc manager
         self.manager.handle(payload)
 
     def request(self, *args, **kwargs):
@@ -30,4 +28,10 @@ class JRPCProtocol(WebSocketServerProtocol):
 
     def invoke(self, *args, **kwargs):
         return self.manager.invoke(*args, **kwargs)
+
+class JRPCServerProtocol(JRPCProtocol, WebSocketServerProtocol):
+    def onConnect(self, info):
+        print "Websocket connected to peer: {}".format(info.peer)
+
+class JRPCClientProtocol(JRPCProtocol, WebSocketClientProtocol): pass
 

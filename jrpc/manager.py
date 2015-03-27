@@ -1,3 +1,6 @@
+import json
+
+from twisted.python.failure import Failure
 from twisted.internet.defer import Deferred, maybeDeferred
 
 from .request import JRPCRequest
@@ -51,14 +54,14 @@ class JRPCManager(object):
         try:
             request = JRPCRequest.from_json(payload)
         except Exception as e:
-            print "Payload exception:", e
+            pass
         else:
             return self.handle_request(request)
 
         try:
             response = JRPCResponse.from_json(payload)
         except Exception as e:
-            print "Payload exception:", e
+            pass
         else:
             return self.handle_response(response)
 
@@ -69,13 +72,18 @@ class JRPCManager(object):
         the resulting deferred object to that it may be
         handed back to the requesting peer.
         """
-        handler = self.dispatcher[request.method]
-        if request.id != None:
-            d = maybeDeferred(handler, *request.args, **request.kwargs)
-            d.addCallback(self.return_response, request.id)
-            d.addErrback(self.return_error, request.id)
+        try:
+            handler = self.dispatcher[request.method]
+        except KeyError:
+            exception = KeyError("`{}` is not an available method.".format(request.method))
+            self.return_error(Failure(exception), request.id)
         else:
-            handler(*request.args, **request.kwargs)
+            if request.id != None:
+                d = maybeDeferred(handler, *request.args, **request.kwargs)
+                d.addCallback(self.return_response, request.id)
+                d.addErrback(self.return_error, request.id)
+            else:
+                handler(*request.args, **request.kwargs)
 
     def return_response(self, result, id):
         """
@@ -90,7 +98,7 @@ class JRPCManager(object):
         """
         response = JRPCResponse(id,
                                 result=failure.getErrorMessage(),
-                                error=str(failure.type))
+                                error=str(failure.type.__name__))
         self.protocol.sendMessage(response.json())
 
     def handle_response(self, response):
@@ -100,8 +108,6 @@ class JRPCManager(object):
         """
         d = self.requests.pop(response.id)
         if response.error:
-            d.errback(response.result)
+            d.errback(response)
         else:
-            d.callback(response.result)
-
-
+            d.callback(response)

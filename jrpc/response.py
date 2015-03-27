@@ -28,6 +28,12 @@ class JRPCResponse(object):
         '''return json representation of the response'''
         return json.dumps(self.data())
 
+    def __str__(self):
+        s = self.result
+        if self.error:
+            s = "{}:{}".format(self.error, self.result)
+        return str(s)
+
     @classmethod
     def from_json(cls, json_str):
         '''create JRPCResponse from json'''
