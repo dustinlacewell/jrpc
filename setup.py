@@ -2,18 +2,16 @@
 
 from setuptools import setup
 
-requirements = []
-with open('requirements.txt') as fobj:
-    for requirement in fobj:
-        requirements.append(requirement)
-
 setup(
     name = "jrpc",
-    version = "0.1.0",
+    version = "0.1.1",
     packages = ['jrpc'],
     scripts = ['bin/jrpc'],
 
-    install_requires = requirements,
+    install_requires = [
+        "Twisted",
+        "autobahn",
+    ],
 
     # metadata for upload to PyPI
     author = "Dustin Lacewell",
