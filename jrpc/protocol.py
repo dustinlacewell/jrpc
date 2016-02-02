@@ -18,6 +18,7 @@ class JRPCProtocol(object):
     will make them automatically available.
     """
     def __init__(self, dispatch=None):
+        super(JRPCProtocol, self).__init__()
         self.manager = JRPCManager(self, dispatch or Dispatcher(self))
 
     def onMessage(self, payload, isBinary):
