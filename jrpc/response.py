@@ -1,5 +1,6 @@
 import json
 
+
 class JRPCResponse(object):
     """
     Represents the result of an executed RPC method request.
@@ -18,11 +19,7 @@ class JRPCResponse(object):
 
     def data(self):
         '''return dictionary representation of the response'''
-        return {
-            'id': self.id,
-            'result': self.result,
-            'error': self.error,
-        }
+        return {'id': self.id, 'result': self.result, 'error': self.error, }
 
     def json(self):
         '''return json representation of the response'''
@@ -38,7 +35,4 @@ class JRPCResponse(object):
     def from_json(cls, json_str):
         '''create JRPCResponse from json'''
         obj = json.loads(json_str)
-        return cls(obj['id'],
-                   obj.get('result'),
-                   obj.get('error'))
-
+        return cls(obj['id'], obj.get('result'), obj.get('error'))

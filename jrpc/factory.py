@@ -2,8 +2,6 @@ from autobahn.websocket.protocol import createWsUrl
 from autobahn.twisted.websocket import WebSocketServerFactory
 from autobahn.twisted.websocket import WebSocketClientFactory
 
-from .protocol import JRPCProtocol
-from .dispatcher import Dispatcher
 
 class JRPCFactory(object):
     """
@@ -25,6 +23,9 @@ class JRPCFactory(object):
         return p
 
 
-class JRPCServerFactory(JRPCFactory, WebSocketServerFactory): pass
+class JRPCServerFactory(JRPCFactory, WebSocketServerFactory):
+    pass
 
-class JRPCClientFactory(JRPCFactory, WebSocketClientFactory): pass
+
+class JRPCClientFactory(JRPCFactory, WebSocketClientFactory):
+    pass

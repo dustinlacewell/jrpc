@@ -1,10 +1,9 @@
-import json
-
 from twisted.python.failure import Failure
 from twisted.internet.defer import Deferred, maybeDeferred
 
 from .request import JRPCRequest
 from .response import JRPCResponse
+
 
 class JRPCManager(object):
     """
@@ -45,45 +44,53 @@ class JRPCManager(object):
     def handle(self, payload):
         """
         Handle an incomming message from the remote peer.
-        Message may either be remote reqeusts for local
+        Message may either be remote requests for local
         method invocation or the result of our own requests.
         """
         if isinstance(payload, bytes):
             payload = payload.decode("utf-8")
 
+        exc = None
+
         try:
             request = JRPCRequest.from_json(payload)
         except Exception as e:
-            pass
+            exc = e
         else:
             return self.handle_request(request)
 
         try:
             response = JRPCResponse.from_json(payload)
         except Exception as e:
-            pass
+            exc = e
         else:
             return self.handle_response(response)
+
+        self.return_error(Failure(exc), None)
 
     def handle_request(self, request):
         """
         Handle an incomming request to call a local method.
         If the request contains an id attach callbacks to
-        the resulting deferred object to that it may be
+        the resulting deferred object so that it may be
         handed back to the requesting peer.
         """
         try:
             handler = self.dispatcher[request.method]
         except KeyError:
-            exception = KeyError("`{}` is not an available method.".format(request.method))
+            exception = KeyError("`{}` is not an available method.".format(
+                request.method))
             self.return_error(Failure(exception), request.id)
         else:
-            if request.id != None:
-                d = maybeDeferred(handler, *request.args, **request.kwargs)
-                d.addCallback(self.return_response, request.id)
-                d.addErrback(self.return_error, request.id)
-            else:
-                handler(*request.args, **request.kwargs)
+            try:
+                if request.id is not None:
+                    d = maybeDeferred(handler, *request.args, **request.kwargs)
+                    d.addCallback(self.return_response, request.id)
+                    d.addErrback(self.return_error, request.id)
+                else:
+                    handler(*request.args, **request.kwargs)
+            except Exception as e:
+                self.return_error(Failure(e), request.id)
 
     def return_response(self, result, id):
         """

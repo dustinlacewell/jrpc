@@ -1,5 +1,6 @@
 import json
 
+
 class JRPCRequest(object):
     """
     Represents the intention to invoke an RPC method whether
@@ -7,6 +8,7 @@ class JRPCRequest(object):
     not recieve a result and will not increment request
     counters.
     """
+
     def __init__(self, method, args=None, kwargs=None, id=None):
         # the name of the method to invoke
         self.method = method
@@ -34,8 +36,5 @@ class JRPCRequest(object):
     def from_json(cls, json_str):
         '''create a JRPCRequest from json'''
         obj = json.loads(json_str)
-        return cls(obj['method'],
-                   obj.get('args', tuple()),
-                   obj.get('kwargs', dict()),
-                   obj.get('id', None))
-
+        return cls(obj['method'], obj.get('args', tuple()),
+                   obj.get('kwargs', dict()), obj.get('id', None))
